@@ -2,7 +2,6 @@ use std::sync::Arc;
 use base64;
 
 use crate::server::request_handler::RequestHandler;
-use crate::server::json_request_handler::{JsonRequestHandler, JsonRequestHandlerAdapter};
 use crate::server::server_error::{ServerError, LogicError};
 use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler, ProtectedJsonRequestHandlerAdapter, ProtectedInput};
 use crate::utils::camera::Camera;

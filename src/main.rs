@@ -1,6 +1,3 @@
-use std::{thread, time};
-use std::time::Duration;
-
 extern crate futures;
 extern crate hyper;
 
