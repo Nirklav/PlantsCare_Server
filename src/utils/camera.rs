@@ -3,10 +3,7 @@ use rascam::*;
 
 use std::{thread, time, fmt};
 use std::time::Duration;
-use std::fs::File;
-use std::io::Write;
 use std::fmt::{Display, Formatter};
-use crate::server::server_error::{ServerError, LogicError};
 
 /*
 use sysfs_gpio::*;
@@ -60,12 +57,12 @@ impl Camera {
         let mut camera = SimpleCamera::new(self.info.clone())?;
         camera.activate()?;
 
-        let sleep_duration = time::Duration::from_millis(2000);
+        let sleep_duration = Duration::from_millis(2000);
         thread::sleep(sleep_duration);
 
         let image = camera.take_one()?;
 
-        Ok(Vec::from(&image))
+        Ok(Vec::from(image.as_slice()))
     }
 }
 
