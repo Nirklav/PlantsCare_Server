@@ -15,6 +15,7 @@ extern crate log4rs;
 
 use std::net::SocketAddr;
 use std::str::FromStr;
+use std::sync::Arc;
 
 use hyper::server::{Http, Request, Response, NewService};
 
@@ -70,13 +71,13 @@ fn main() {
 }
 
 struct BucketServiceFactory {
-    camera: Camera
+    camera: Arc<Camera>
 }
 
 impl BucketServiceFactory {
     fn new(camera: Camera) -> Self {
         BucketServiceFactory {
-            camera
+            camera: Arc::new(camera)
         }
     }
 }
