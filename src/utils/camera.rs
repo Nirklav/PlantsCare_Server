@@ -31,7 +31,7 @@ pub struct Camera {
 
 impl Camera {
     #[cfg(not(target_os = "linux"))]
-    pub fn new() -> Result<Self, ServerError> {
+    pub fn new() -> Result<Self, CameraError> {
         Ok(Camera {
         })
     }
@@ -42,11 +42,11 @@ impl Camera {
     }
 
     #[cfg(target_os = "linux")]
-    pub fn new() -> Result<Self, ServerError> {
+    pub fn new() -> Result<Self, CameraError> {
         let mut info = rascam::info()?;
 
         if info.cameras.is_empty() {
-            return Err(LogicError::CameraNotFound.into());
+            return Err(CameraError::NotFound);
         }
 
         let first = info.cameras.remove(0);
@@ -69,9 +69,10 @@ impl Camera {
 }
 
 #[derive(Debug)]
-pub struct CameraError {
+pub enum CameraError {
     #[cfg(target_os = "linux")]
-    inner: rascam::CameraError
+    Rascam(rascam::CameraError),
+    NotFound
 }
 
 impl Display for CameraError {
@@ -82,15 +83,16 @@ impl Display for CameraError {
 
     #[cfg(target_os = "linux")]
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
-        self.inner.fmt(f)
+        match &self {
+            CameraError::Rascam(&e) => e.fmt(f),
+            NotFound => write!(f, "Camera not found")
+        }
     }
 }
 
 #[cfg(target_os = "linux")]
 impl From<rascam::CameraError> for CameraError {
     fn from(e: rascam::CameraError) -> Self {
-        CameraError {
-            inner: e
-        }
+        CameraError::Rascam(e)
     }
 }
