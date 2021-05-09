@@ -8,7 +8,6 @@ use serde_json;
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     pub address: String,
-    pub db_connection: String,
     pub log_config_path: String
 }
 
