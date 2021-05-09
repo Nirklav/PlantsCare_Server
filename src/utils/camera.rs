@@ -62,7 +62,7 @@ impl Camera {
 
         let image = camera.take_one()?;
 
-        writeln!("copying photo to own memory...");
+        info!("copying photo to own memory...");
         Ok(Vec::from(image.as_slice()))
     }
 }

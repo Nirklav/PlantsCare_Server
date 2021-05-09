@@ -60,7 +60,7 @@ fn main() {
         Err(e) => panic!("error on server bind: {}", e)
     };
 
-    println!("Running server...");
+    info!("Running server...");
 
     if let Err(e) = server.run() {
         panic!("error on server run: {}", e)

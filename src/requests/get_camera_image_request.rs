@@ -45,10 +45,10 @@ impl ProtectedJsonRequestHandler for GetCameraImageRequest {
     fn process(&self, _: Input) -> Result<Output, ServerError> {
         let photo = self.camera.make_photo()?;
 
-        writeln!("encoding photo to base64...");
+        info!("encoding photo to base64...");
         let photo_encoded = base64::encode(photo);
 
-        writeln!("sending photo...");
+        info!("sending photo...");
         Ok(Output {
             image_base64: photo_encoded
         })
