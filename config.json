@@ -1,0 +1,5 @@
+{
+  "address": "0.0.0.0:10030",
+  "db_connection": "postgres://postgres:Hello@localhost:5432/bucket_server",
+  "log_config_path": "log.json"
+}
