@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 sysfs_gpio = "0.5.4"
+rascam = "0.0.2"
