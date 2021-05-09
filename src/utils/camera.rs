@@ -57,13 +57,14 @@ impl Camera {
 
     #[cfg(target_os = "linux")]
     pub fn make_photo(&self) -> Result<Vec<u8>, CameraError> {
-        let mut camera = SimpleCamera::new(info.clone())?;
+        let mut camera = SimpleCamera::new(self.info.clone())?;
         camera.activate()?;
 
         let sleep_duration = time::Duration::from_millis(2000);
         thread::sleep(sleep_duration);
 
         let image = camera.take_one()?;
+
         Ok(Vec::from(&image))
     }
 }
@@ -84,7 +85,7 @@ impl Display for CameraError {
     #[cfg(target_os = "linux")]
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
         match &self {
-            CameraError::Rascam(&e) => e.fmt(f),
+            CameraError::Rascam(ref e) => e.fmt(f),
             NotFound => write!(f, "Camera not found")
         }
     }
