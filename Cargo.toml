@@ -5,8 +5,6 @@ authors = ["Nirklav <mrAnton911@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-#sysfs_gpio = "0.5.4"
-rascam = "0.0.2"
 
 futures = "0.1.16"
 hyper = "0.11.6"
@@ -18,3 +16,8 @@ base64 = "0.13.0"
 
 log = "0.3.8"
 log4rs = { version = "0.7.0", features = ["all_components", "json_format"] }
+
+
+[target.'cfg(linux)'.dependencies]
+sysfs_gpio = "0.5.4"
+rascam = "0.0.2"

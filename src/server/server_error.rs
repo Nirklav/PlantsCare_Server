@@ -5,10 +5,11 @@ use std::error::Error;
 use hyper;
 use hyper::StatusCode;
 use serde_json;
-use rascam::CameraError;
 
 use futures::future;
 use futures::future::FutureResult;
+
+use crate::utils::camera::CameraError;
 
 #[derive(Debug)]
 pub enum ServerError {
