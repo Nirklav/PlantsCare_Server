@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use base64;
+use deflate;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
@@ -45,10 +46,15 @@ impl ProtectedJsonRequestHandler for GetCameraImageRequest {
     fn process(&self, _: Input) -> Result<Output, ServerError> {
         let photo = self.camera.make_photo()?;
 
-        info!("encoding photo to base64...");
-        let photo_encoded = base64::encode(photo);
+        info!("Compressing photo...");
+        let photo_gzip = deflate::deflate_bytes_gzip(&photo);
+        info!("Photo compressed (before: {}, after: {})", photo.len(), photo_gzip.len());
 
-        info!("sending photo...");
+        info!("Encoding photo to base64...");
+        let photo_encoded = base64::encode(photo_gzip);
+        info!("Photo converted to base64 (len: {})", photo_encoded.len());
+
+        info!("Sending photo...");
         Ok(Output {
             image_base64: photo_encoded
         })
