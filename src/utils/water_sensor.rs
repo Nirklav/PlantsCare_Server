@@ -29,10 +29,10 @@ impl WaterSensor {
     pub fn new() -> Result<Self, RppalError>{
         let gpio = Gpio::new()?;
 
-        let mut power_pin = self.gpio.get(WATER_SENSOR_POWER_PIN)?
+        let mut power_pin = gpio.get(WATER_SENSOR_POWER_PIN)?
             .into_output();
 
-        if !power_pin.set_low()? {
+        if !power_pin.set_low() {
             warn!("Power pin can't be set low");
         }
 
@@ -54,7 +54,7 @@ impl WaterSensor {
         let mut in_pin = self.gpio.get(WATER_SENSOR_IN)?
             .into_input();
 
-        if !power_pin.set_high()? {
+        if !power_pin.set_high() {
             warn!("Power pin can't be set high");
             return Ok(false);
         }
@@ -63,7 +63,7 @@ impl WaterSensor {
 
         let in_pin_high = in_pin.is_high();
 
-        if !power_pin.set_low()? {
+        if !power_pin.set_low() {
             warn!("Power pin can't be set low");
         }
 
