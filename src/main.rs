@@ -21,6 +21,7 @@ use config::Config;
 use utils::camera::Camera;
 
 use requests::*;
+use crate::utils::water_sensor::WaterSensor;
 
 mod config;
 mod server;
@@ -55,7 +56,13 @@ fn main() {
         Err(e) => panic!("error on camera creation {}", e)
     };
 
-    let server = match Http::new().bind(&socket_addr, BucketServiceFactory::new(camera)) {
+    let water_sensor = match WaterSensor::new() {
+        Ok(ws) => ws,
+        Err(e) => panic!("error on water sensor creation {}", e)
+    };
+
+    let factory = PlantsCareServiceFactory::new(config.protected_key.clone(), camera, water_sensor);
+    let server = match Http::new().bind(&socket_addr, factory) {
         Ok(s) => s,
         Err(e) => panic!("error on server bind: {}", e)
     };
@@ -67,19 +74,23 @@ fn main() {
     };
 }
 
-struct BucketServiceFactory {
-    camera: Arc<Camera>
+struct PlantsCareServiceFactory {
+    protected_key: String,
+    camera: Arc<Camera>,
+    water_sensor: Arc<WaterSensor>
 }
 
-impl BucketServiceFactory {
-    fn new(camera: Camera) -> Self {
-        BucketServiceFactory {
-            camera: Arc::new(camera)
+impl PlantsCareServiceFactory {
+    fn new(protected_key: String, camera: Camera, water_sensor: WaterSensor) -> Self {
+        PlantsCareServiceFactory {
+            protected_key,
+            camera: Arc::new(camera),
+            water_sensor: Arc::new(water_sensor)
         }
     }
 }
 
-impl NewService for BucketServiceFactory {
+impl NewService for PlantsCareServiceFactory {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;
@@ -88,7 +99,8 @@ impl NewService for BucketServiceFactory {
     fn new_service(&self) -> std::io::Result<Self::Instance> {
         let mut service = BucketService::new();
         service.add_handler(echo_request::EchoRequest::new());
-        service.add_handler(get_camera_image_request::GetCameraImageRequest::new(&self.camera));
+        service.add_handler(get_camera_image_request::GetCameraImageRequest::new(&self.protected_key, &self.camera));
+        service.add_handler(is_enough_water_request::IsEnoughWaterRequest::new(&self.protected_key, &self.water_sensor));
         Ok(service)
     }
 }

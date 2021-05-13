@@ -110,6 +110,7 @@ impl BucketService {
             ServerError::Logic(_) => Self::error(Some("Logic error".to_owned()), StatusCode::InternalServerError),
             ServerError::Hyper(e) => future::err(e),
             ServerError::Camera(_) => Self::error(Some("Camera error".to_owned()), StatusCode::InternalServerError),
+            ServerError::Rppal(_) => Self::error(Some("Rppal lib error".to_owned()), StatusCode::InternalServerError),
             ServerError::Read(_) => Self::error(None, StatusCode::BadRequest)
         }
     }

@@ -27,8 +27,8 @@ pub struct GetCameraImageRequest {
 }
 
 impl GetCameraImageRequest {
-    pub fn new(camera: &Arc<Camera>) -> Arc<dyn RequestHandler> {
-        ProtectedJsonRequestHandlerAdapter::new("hJasd123SDm1l_12!", GetCameraImageRequest {
+    pub fn new(key: &str, camera: &Arc<Camera>) -> Arc<dyn RequestHandler> {
+        ProtectedJsonRequestHandlerAdapter::new(key, GetCameraImageRequest {
             camera: camera.clone()
         })
     }

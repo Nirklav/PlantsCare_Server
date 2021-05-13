@@ -10,6 +10,7 @@ use futures::future;
 use futures::future::FutureResult;
 
 use crate::utils::camera::CameraError;
+use crate::utils::rppal_error::RppalError;
 
 #[derive(Debug)]
 pub enum ServerError {
@@ -17,6 +18,7 @@ pub enum ServerError {
     Logic(LogicError),
     Hyper(hyper::Error),
     Camera(CameraError),
+    Rppal(RppalError),
     Read(ReadError)
 }
 
@@ -44,6 +46,12 @@ impl From<CameraError> for ServerError {
     }
 }
 
+impl From<RppalError> for ServerError {
+    fn from(e: RppalError) -> Self {
+        ServerError::Rppal(e)
+    }
+}
+
 impl From<ReadError> for ServerError {
     fn from(e: ReadError) -> Self {
         ServerError::Read(e)
@@ -57,6 +65,7 @@ impl Display for ServerError {
             ServerError::Logic(ref e) => e.fmt(f),
             ServerError::Hyper(ref e) => e.fmt(f),
             ServerError::Camera(ref e) => e.fmt(f),
+            ServerError::Rppal(ref e) => e.fmt(f),
             ServerError::Read(ref e) => e.fmt(f)
         }
     }
