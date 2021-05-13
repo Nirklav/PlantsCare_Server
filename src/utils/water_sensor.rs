@@ -32,9 +32,7 @@ impl WaterSensor {
         let mut power_pin = gpio.get(WATER_SENSOR_POWER_PIN)?
             .into_output();
 
-        if !power_pin.set_low() {
-            warn!("Power pin can't be set low");
-        }
+        power_pin.set_low();
 
         Ok(WaterSensor {
             gpio
@@ -54,19 +52,12 @@ impl WaterSensor {
         let mut in_pin = self.gpio.get(WATER_SENSOR_IN)?
             .into_input();
 
-        if !power_pin.set_high() {
-            warn!("Power pin can't be set high");
-            return Ok(false);
-        }
-
+        power_pin.set_high();
         thread::sleep(Duration::from_millis(50));
 
         let in_pin_high = in_pin.is_high();
 
-        if !power_pin.set_low() {
-            warn!("Power pin can't be set low");
-        }
-
+        power_pin.set_low();
         Ok(in_pin_high)
     }
 }
