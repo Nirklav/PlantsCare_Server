@@ -43,7 +43,7 @@ impl ProtectedJsonRequestHandler for IsEnoughWaterRequest {
 
     fn process(&self, _: Input) -> Result<Output, ServerError> {
         Ok(Output {
-          result: self.water_sensor.is_enough()?
+            result: self.water_sensor.is_enough()?
         })
     }
 }
