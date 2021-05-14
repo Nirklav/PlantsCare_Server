@@ -55,9 +55,9 @@ impl WaterSensor {
         power_pin.set_high();
         thread::sleep(Duration::from_millis(1000));
 
-        let in_pin_high = in_pin.is_high();
+        let in_pin_low = in_pin.is_low();
 
         power_pin.set_low();
-        Ok(in_pin_high)
+        Ok(in_pin_low)
     }
 }
