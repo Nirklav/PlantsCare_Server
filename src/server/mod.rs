@@ -9,7 +9,7 @@ use futures::future::FutureResult;
 use hyper;
 use hyper::{Headers, StatusCode, Method};
 use hyper::server::{Service, Request, Response};
-use hyper::header::{ContentEncoding, ContentType, Allow, Encoding};
+use hyper::header::{ContentEncoding, ContentType, Allow, Encoding, ContentLength};
 
 use self::request_handler::RequestHandler;
 use self::headers::ServerMethod;
@@ -120,6 +120,7 @@ impl BucketService {
             .with_status(StatusCode::Ok)
             .with_header(ContentEncoding(vec![Encoding::Identity]))
             .with_header(ContentType::json())
+            .with_header(ContentLength(output.as_bytes().len() as u64))
             .with_body(output);
 
         future::ok::<Response, ServerError>(res)
