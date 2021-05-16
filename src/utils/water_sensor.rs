@@ -13,10 +13,10 @@ pub struct WaterSensor {
 }
 
 #[cfg(target_os = "linux")]
-const WATER_SENSOR_POWER_PIN : u8 = 17;
+const WATER_SENSOR_POWER_PIN : u8 = 24;
 
 #[cfg(target_os = "linux")]
-const WATER_SENSOR_IN : u8 = 27;
+const WATER_SENSOR_IN : u8 = 23;
 
 impl WaterSensor {
     #[cfg(target_os = "windows")]
