@@ -1,6 +1,7 @@
 #[cfg(target_os = "linux")]
 use rppal::gpio::Gpio;
-
+#[cfg(target_os = "linux")]
+use std::thread;
 use std::time::Duration;
 
 use crate::utils::rppal_error::RppalError;
