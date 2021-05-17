@@ -58,7 +58,7 @@ impl ProtectedJsonRequestHandler for WaterRequest {
         }
 
         let duration = Duration::from_secs(i.duration_seconds);
-        self.water_pump.enable(duration);
+        self.water_pump.enable(duration)?;
 
         Ok(Output {
             result: true,
