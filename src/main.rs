@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use hyper::server::{Http, Request, Response, NewService};
 
-use server::BucketService;
+use server::PlantsCareService;
 use config::Config;
 use utils::camera::Camera;
 
@@ -102,10 +102,10 @@ impl NewService for PlantsCareServiceFactory {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;
-    type Instance = BucketService;
+    type Instance = PlantsCareService;
 
     fn new_service(&self) -> std::io::Result<Self::Instance> {
-        let mut service = BucketService::new();
+        let mut service = PlantsCareService::new();
         service.add_handler(echo_request::EchoRequest::new());
         service.add_handler(get_camera_image_request::GetCameraImageRequest::new(&self.protected_key, &self.camera));
         service.add_handler(is_enough_water_request::IsEnoughWaterRequest::new(&self.protected_key, &self.water_sensor));

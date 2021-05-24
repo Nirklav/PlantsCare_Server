@@ -21,13 +21,13 @@ pub mod request_handler;
 pub mod json_request_handler;
 pub mod protected_json_request_handler;
 
-pub struct BucketService {
+pub struct PlantsCareService {
     requests: HashMap<&'static str, Arc<dyn RequestHandler>>
 }
 
-impl BucketService {
-    pub fn new() -> BucketService {
-        BucketService {
+impl PlantsCareService {
+    pub fn new() -> PlantsCareService {
+        PlantsCareService {
             requests : HashMap::new()
         }
     }
@@ -141,7 +141,7 @@ impl BucketService {
     }
 }
 
-impl Service for BucketService {
+impl Service for PlantsCareService {
     type Request = Request;
     type Response = Response;
     type Error = hyper::Error;

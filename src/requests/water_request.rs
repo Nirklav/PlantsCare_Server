@@ -49,6 +49,8 @@ impl ProtectedJsonRequestHandler for WaterRequest {
     }
 
     fn process(&self, i: Input) -> Result<Output, ServerError> {
+        info!("water request: duration {}s, force {}", &i.duration_seconds, &i.force);
+
         let is_enough_water = self.water_sensor.is_enough()?;
         if !i.force && !is_enough_water {
             return Ok(Output {
