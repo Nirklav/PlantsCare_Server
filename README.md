@@ -15,7 +15,7 @@ Android client for this server you can find [there](https://github.com/Nirklav/P
 # Scheme:
 ![alt tag](https://raw.github.com/Nirklav/PlantsCare_Server/master/scheme.png)
 
-#Setup:
+# Setup:
 I recommend use lite version of raspberry pi os.
 
 1. Install git.
