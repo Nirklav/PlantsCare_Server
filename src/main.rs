@@ -23,6 +23,7 @@ use utils::camera::Camera;
 use requests::*;
 use crate::utils::water_sensor::WaterSensor;
 use crate::utils::water_pump::WaterPump;
+use crate::utils::servo::Servo;
 
 mod config;
 mod server;
@@ -67,7 +68,12 @@ fn main() {
         Err(e) => panic!("error on water pump creation {}", e)
     };
 
-    let factory = PlantsCareServiceFactory::new(config.protected_key.clone(), camera, water_sensor, water_pump);
+    let servo = match Servo::new() {
+        Ok(s) => s,
+        Err(e) => panic!("error on servo creation {}", e)
+    };
+
+    let factory = PlantsCareServiceFactory::new(config.protected_key.clone(), camera, water_sensor, water_pump, servo);
     let server = match Http::new().bind(&socket_addr, factory) {
         Ok(s) => s,
         Err(e) => panic!("error on server bind: {}", e)
@@ -84,16 +90,18 @@ struct PlantsCareServiceFactory {
     protected_key: String,
     camera: Arc<Camera>,
     water_sensor: Arc<WaterSensor>,
-    water_pump: Arc<WaterPump>
+    water_pump: Arc<WaterPump>,
+    servo: Arc<Servo>
 }
 
 impl PlantsCareServiceFactory {
-    fn new(protected_key: String, camera: Camera, water_sensor: WaterSensor, water_pump: WaterPump) -> Self {
+    fn new(protected_key: String, camera: Camera, water_sensor: WaterSensor, water_pump: WaterPump, servo: Servo) -> Self {
         PlantsCareServiceFactory {
             protected_key,
             camera: Arc::new(camera),
             water_sensor: Arc::new(water_sensor),
-            water_pump: Arc::new(water_pump)
+            water_pump: Arc::new(water_pump),
+            servo: Arc::new(servo)
         }
     }
 }
@@ -110,6 +118,7 @@ impl NewService for PlantsCareServiceFactory {
         service.add_handler(get_camera_image_request::GetCameraImageRequest::new(&self.protected_key, &self.camera));
         service.add_handler(is_enough_water_request::IsEnoughWaterRequest::new(&self.protected_key, &self.water_sensor));
         service.add_handler(water_request::WaterRequest::new(&self.protected_key, &self.water_sensor, &self.water_pump));
+        service.add_handler(turn_servo_request::TurnServoRequest::new(&self.servo));
         Ok(service)
     }
 }
