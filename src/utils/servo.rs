@@ -23,23 +23,8 @@ impl Servo {
         })
     }
 
-    pub fn turn_next(&self) -> Result<(), RppalError> {
-        let duty_cycle = self.pwm.duty_cycle()?;
-        info!("duty_cycle: {}", &duty_cycle);
-
-        if (duty_cycle - MINUS_90).abs() < 0.001 {
-            info!("turn_next: ZERO");
-            self.pwm.set_duty_cycle(ZERO)?;
-        }
-        if (duty_cycle - ZERO).abs() < 0.001 {
-            info!("turn_next: PLUS_90");
-            self.pwm.set_duty_cycle(PLUS_90)?;
-        }
-        if (duty_cycle - PLUS_90).abs() < 0.001 {
-            info!("turn_next: MINUS_90");
-            self.pwm.set_duty_cycle(MINUS_90)?;
-        }
-
+    pub fn turn_next(&self, duty_cycle: f64) -> Result<(), RppalError> {
+        self.pwm.set_duty_cycle(duty_cycle)?;
         Ok(())
     }
 }

@@ -7,7 +7,7 @@ use crate::utils::servo::Servo;
 
 #[derive(Deserialize, Debug)]
 pub struct Input {
-    angle: f32
+    duty_cycle: f64
 }
 
 #[derive(Serialize, Debug)]
@@ -35,8 +35,8 @@ impl JsonRequestHandler for TurnServoRequest {
         "turn-servo"
     }
 
-    fn process(&self, _: Input) -> Result<Output, ServerError> {
-        self.servo.turn_next()?;
+    fn process(&self, input: Input) -> Result<Output, ServerError> {
+        self.servo.turn_next(input.duty_cycle)?;
         Ok(Output {
             result: "Ok".to_string()
         })
