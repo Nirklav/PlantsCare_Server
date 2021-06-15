@@ -1,13 +1,14 @@
 use std::sync::Arc;
 
 use crate::server::request_handler::RequestHandler;
-use crate::server::json_request_handler::{JsonRequestHandler, JsonRequestHandlerAdapter};
+use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler, ProtectedJsonRequestHandlerAdapter, ProtectedInput};
 use crate::server::server_error::{ServerError};
 use crate::utils::servo::Servo;
 
 #[derive(Deserialize, Debug)]
 pub struct Input {
-    duty_cycle: f64
+    key: String,
+    angle: f32
 }
 
 #[derive(Serialize, Debug)]
@@ -15,19 +16,25 @@ pub struct Output {
     result: String
 }
 
+impl ProtectedInput for Input {
+    fn get_protected_key(&self) -> &str {
+        &self.key
+    }
+}
+
 pub struct TurnServoRequest {
     servo: Arc<Servo>
 }
 
 impl TurnServoRequest {
-    pub fn new(servo: &Arc<Servo>) -> Arc<dyn RequestHandler> {
-        JsonRequestHandlerAdapter::new(TurnServoRequest {
+    pub fn new(key: &str, servo: &Arc<Servo>) -> Arc<dyn RequestHandler> {
+        ProtectedJsonRequestHandlerAdapter::new(key, TurnServoRequest {
             servo: servo.clone()
         })
     }
 }
 
-impl JsonRequestHandler for TurnServoRequest {
+impl ProtectedJsonRequestHandler for TurnServoRequest {
     type Input = Input;
     type Output = Output;
 
@@ -36,7 +43,7 @@ impl JsonRequestHandler for TurnServoRequest {
     }
 
     fn process(&self, input: Input) -> Result<Output, ServerError> {
-        self.servo.turn_next(input.duty_cycle)?;
+        self.servo.turn_to(input.angle)?;
         Ok(Output {
             result: "Ok".to_string()
         })

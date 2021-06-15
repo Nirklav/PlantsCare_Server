@@ -118,7 +118,7 @@ impl NewService for PlantsCareServiceFactory {
         service.add_handler(get_camera_image_request::GetCameraImageRequest::new(&self.protected_key, &self.camera));
         service.add_handler(is_enough_water_request::IsEnoughWaterRequest::new(&self.protected_key, &self.water_sensor));
         service.add_handler(water_request::WaterRequest::new(&self.protected_key, &self.water_sensor, &self.water_pump));
-        service.add_handler(turn_servo_request::TurnServoRequest::new(&self.servo));
+        service.add_handler(turn_servo_request::TurnServoRequest::new(&self.protected_key, &self.servo));
         Ok(service)
     }
 }
