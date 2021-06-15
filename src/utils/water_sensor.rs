@@ -49,7 +49,7 @@ impl WaterSensor {
         let mut power_pin = self.gpio.get(WATER_SENSOR_POWER_PIN)?
             .into_output();
 
-        let mut in_pin = self.gpio.get(WATER_SENSOR_IN)?
+        let in_pin = self.gpio.get(WATER_SENSOR_IN)?
             .into_input();
 
         power_pin.set_high();

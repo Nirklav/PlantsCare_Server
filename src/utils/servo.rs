@@ -16,8 +16,8 @@ impl Servo {
     pub fn new() -> Result<Servo, RppalError> {
         let pwm = pwm::Pwm::new(Channel::Pwm0)?;
         pwm.set_period(Duration::from_millis(20))?;
-        pwm.set_duty_cycle(ZERO);
-        pwm.enable();
+        pwm.set_duty_cycle(ZERO)?;
+        pwm.enable()?;
 
         Ok(Servo {
             pwm
@@ -27,12 +27,15 @@ impl Servo {
     pub fn turn_next(&self) -> Result<(), RppalError> {
         let duty_cycle = self.pwm.duty_cycle()?;
         if duty_cycle == MINUS_90 {
+            info!("turn_next: ZERO");
             self.pwm.set_duty_cycle(ZERO)?;
         }
         if duty_cycle == ZERO {
+            info!("turn_next: PLUS_90");
             self.pwm.set_duty_cycle(PLUS_90)?;
         }
         if duty_cycle == PLUS_90 {
+            info!("turn_next: MINUS_90");
             self.pwm.set_duty_cycle(MINUS_90)?;
         }
 
