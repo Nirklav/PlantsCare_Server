@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::json_request_handler::{JsonRequestHandler, JsonRequestHandlerAdapter};
-use crate::server::server_error::{ServerError, LogicError};
+use crate::server::server_error::{ServerError};
 use crate::utils::servo::Servo;
 
 #[derive(Deserialize, Debug)]

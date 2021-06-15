@@ -2,7 +2,6 @@ use rppal::*;
 use rppal::pwm::{Channel, Pwm};
 use crate::utils::rppal_error::RppalError;
 use std::time::Duration;
-use core::num::FpCategory::Zero;
 
 pub const MINUS_90 : f64 = 5.0;
 pub const ZERO : f64 = 7.5;
@@ -26,15 +25,17 @@ impl Servo {
 
     pub fn turn_next(&self) -> Result<(), RppalError> {
         let duty_cycle = self.pwm.duty_cycle()?;
-        if duty_cycle == MINUS_90 {
+        info!("duty_cycle: {}", &duty_cycle);
+
+        if (duty_cycle - MINUS_90).abs() < 0.01 {
             info!("turn_next: ZERO");
             self.pwm.set_duty_cycle(ZERO)?;
         }
-        if duty_cycle == ZERO {
+        if (duty_cycle - ZERO).abs() < 0.01 {
             info!("turn_next: PLUS_90");
             self.pwm.set_duty_cycle(PLUS_90)?;
         }
-        if duty_cycle == PLUS_90 {
+        if (duty_cycle - PLUS_90).abs() < 0.01 {
             info!("turn_next: MINUS_90");
             self.pwm.set_duty_cycle(MINUS_90)?;
         }
