@@ -1,6 +1,7 @@
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::error::Error;
+use std::sync::{MutexGuard, PoisonError};
 
 use hyper;
 use hyper::StatusCode;
@@ -19,7 +20,8 @@ pub enum ServerError {
     Hyper(hyper::Error),
     Camera(CameraError),
     Rppal(RppalError),
-    Read(ReadError)
+    Read(ReadError),
+    Inner(Box<dyn Error>)
 }
 
 impl From<serde_json::error::Error> for ServerError {
@@ -58,6 +60,12 @@ impl From<ReadError> for ServerError {
     }
 }
 
+impl From<&dyn Error> for ServerError {
+    fn from(e: &dyn Error) -> Self {
+        ServerError::Unknown(Box::new(e))
+    }
+}
+
 impl Display for ServerError {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         match *self {
@@ -66,7 +74,8 @@ impl Display for ServerError {
             ServerError::Hyper(ref e) => e.fmt(f),
             ServerError::Camera(ref e) => e.fmt(f),
             ServerError::Rppal(ref e) => e.fmt(f),
-            ServerError::Read(ref e) => e.fmt(f)
+            ServerError::Read(ref e) => e.fmt(f),
+            ServerError::Inner(ref e) => e.fmt(f)
         }
     }
 }

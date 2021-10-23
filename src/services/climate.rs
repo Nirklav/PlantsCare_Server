@@ -1,15 +1,14 @@
 use std::sync::Mutex;
-use proc_macro::bridge::server::Server;
 use crate::server::server_error::ServerError;
 
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Conditioner {
     enabled: bool,
     temperature: i32,
     mode: ConditionerMode
 }
 
-#[derive(Serialize, Debug, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum ConditionerMode {
     Auto = 0,
     Cool = 1,

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
 use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler, ProtectedJsonRequestHandlerAdapter, ProtectedInput};
-use crate::services::climate::{WeatherSensor, Conditioner, Climate, Sensors};
+use crate::services::climate::{Conditioner, Climate};
 
 #[derive(Deserialize, Debug)]
 pub struct Input {
@@ -41,7 +41,7 @@ impl ProtectedJsonRequestHandler for GetClimateRequest {
         "get-climate"
     }
 
-    fn process(&self, _: Input) -> Result<Output, ServerError> {;
+    fn process(&self, _: Input) -> Result<Output, ServerError> {
         let conditioners = self.climate.conditioners()?;
         Ok(Output {
             conditioners
