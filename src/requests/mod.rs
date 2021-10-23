@@ -3,3 +3,6 @@ pub mod get_camera_image_request;
 pub mod is_enough_water_request;
 pub mod water_request;
 pub mod turn_servo_request;
+pub mod conditioners_request;
+pub mod get_climate_request;
+pub mod set_climate_request;

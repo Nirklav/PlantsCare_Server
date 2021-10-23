@@ -24,11 +24,13 @@ use requests::*;
 use crate::utils::water_sensor::WaterSensor;
 use crate::utils::water_pump::WaterPump;
 use crate::utils::servo::Servo;
+use crate::services::climate::Climate;
 
 mod config;
 mod server;
 mod requests;
 mod utils;
+mod services;
 
 fn main() {
     let mut args = std::env::args();
@@ -91,7 +93,8 @@ struct PlantsCareServiceFactory {
     camera: Arc<Camera>,
     water_sensor: Arc<WaterSensor>,
     water_pump: Arc<WaterPump>,
-    servo: Arc<Servo>
+    servo: Arc<Servo>,
+    climate: Arc<Climate>
 }
 
 impl PlantsCareServiceFactory {
@@ -101,7 +104,8 @@ impl PlantsCareServiceFactory {
             camera: Arc::new(camera),
             water_sensor: Arc::new(water_sensor),
             water_pump: Arc::new(water_pump),
-            servo: Arc::new(servo)
+            servo: Arc::new(servo),
+            climate: Arc::new(Climate::new())
         }
     }
 }
@@ -115,10 +119,15 @@ impl NewService for PlantsCareServiceFactory {
     fn new_service(&self) -> std::io::Result<Self::Instance> {
         let mut service = PlantsCareService::new();
         service.add_handler(echo_request::EchoRequest::new());
+
         service.add_handler(get_camera_image_request::GetCameraImageRequest::new(&self.protected_key, &self.camera));
         service.add_handler(is_enough_water_request::IsEnoughWaterRequest::new(&self.protected_key, &self.water_sensor));
         service.add_handler(water_request::WaterRequest::new(&self.protected_key, &self.water_sensor, &self.water_pump));
         service.add_handler(turn_servo_request::TurnServoRequest::new(&self.protected_key, &self.servo));
+
+        service.add_handler(conditioners_request::ConditionersRequest::new(&self.protected_key, &self.climate));
+        service.add_handler(get_climate_request::GetClimateRequest::new(&self.protected_key, &self.climate));
+        service.add_handler(set_climate_request::SetClimateRequest::new(&self.protected_key, &self.climate));
         Ok(service)
     }
 }

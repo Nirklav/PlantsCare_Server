@@ -58,6 +58,7 @@ impl Camera {
 pub enum CameraError {
     #[cfg(target_os = "linux")]
     Rascam(rascam::CameraError),
+    #[cfg(target_os = "linux")]
     NotFound
 }
 
