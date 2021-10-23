@@ -43,7 +43,7 @@ impl ProtectedJsonRequestHandler for SetClimateRequest {
     }
 
     fn process(&self, input: Input) -> Result<Output, ServerError> {
-        self.climate.set(&input.conditioners);
+        self.climate.set(&input.conditioners)?;
         Ok(Output {
             result: "Success".to_owned()
         })

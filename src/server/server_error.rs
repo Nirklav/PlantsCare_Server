@@ -1,7 +1,7 @@
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::error::Error;
-use std::sync::{MutexGuard, PoisonError};
+use std::sync::PoisonError;
 
 use hyper;
 use hyper::StatusCode;
@@ -21,7 +21,7 @@ pub enum ServerError {
     Camera(CameraError),
     Rppal(RppalError),
     Read(ReadError),
-    Inner(Box<dyn Error>)
+    Posion
 }
 
 impl From<serde_json::error::Error> for ServerError {
@@ -60,9 +60,9 @@ impl From<ReadError> for ServerError {
     }
 }
 
-impl From<&dyn Error> for ServerError {
-    fn from(e: &dyn Error) -> Self {
-        ServerError::Unknown(Box::new(e))
+impl<T> From<PoisonError<T>> for ServerError {
+    fn from(_: PoisonError<T>) -> Self {
+        ServerError::Posion
     }
 }
 
@@ -75,7 +75,7 @@ impl Display for ServerError {
             ServerError::Camera(ref e) => e.fmt(f),
             ServerError::Rppal(ref e) => e.fmt(f),
             ServerError::Read(ref e) => e.fmt(f),
-            ServerError::Inner(ref e) => e.fmt(f)
+            ServerError::Posion => f.write_str("Poison error")
         }
     }
 }

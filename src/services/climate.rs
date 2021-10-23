@@ -100,9 +100,9 @@ impl Climate {
     }
 
     pub fn conditioners(&self) -> Result<Vec<Conditioner>, ServerError> {
-        let mut guard = self.state.lock()?;
+        let guard = self.state.lock()?;
         Ok(guard.conditioners
-            .into_iter()
+            .iter()
             .map(|c| c.clone())
             .collect())
     }
@@ -112,7 +112,7 @@ impl Climate {
         guard.sensors = sensors;
 
         Ok(guard.conditioners
-            .into_iter()
+            .iter()
             .map(|c| c.clone())
             .collect())
     }
