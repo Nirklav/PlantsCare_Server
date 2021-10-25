@@ -9,9 +9,9 @@ use crate::services::climate::{WeatherSensor, Conditioner, Climate, Sensors};
 pub struct Input {
     key: String,
     sensors: Vec<WeatherSensor>,
-    sensor_temp: i32,
-    bedroom_temp: i32,
-    living_temp: i32
+    sensor_temp: f32,
+    bedroom_temp: f32,
+    living_temp: f32
 }
 
 #[derive(Serialize, Debug)]

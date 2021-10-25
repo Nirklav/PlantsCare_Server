@@ -20,7 +20,7 @@ pub enum ConditionerMode {
 #[derive(Deserialize, Debug)]
 pub struct WeatherSensor {
     channel: i32,
-    temperature: i32,
+    temperature: f32,
     humidity: i32,
     low_battery: bool
 }
@@ -31,9 +31,9 @@ pub struct Climate {
 
 pub struct Sensors {
     weather_sensors: Vec<WeatherSensor>,
-    sensor_temp: i32,
-    bedroom_temp: i32,
-    living_temp: i32
+    sensor_temp: f32,
+    bedroom_temp: f32,
+    living_temp: f32
 }
 
 struct State {
@@ -45,13 +45,13 @@ impl Sensors {
     pub fn empty() -> Self {
         Sensors {
             weather_sensors: Vec::new(),
-            sensor_temp: 0,
-            bedroom_temp: 0,
-            living_temp: 0
+            sensor_temp: 0.0,
+            bedroom_temp: 0.0,
+            living_temp: 0.0
         }
     }
 
-    pub fn new(weather_sensors: Vec<WeatherSensor>, sensor_temp: i32, bedroom_temp: i32, living_temp: i32) -> Self {
+    pub fn new(weather_sensors: Vec<WeatherSensor>, sensor_temp: f32, bedroom_temp: f32, living_temp: f32) -> Self {
         Sensors {
             weather_sensors,
             sensor_temp,
