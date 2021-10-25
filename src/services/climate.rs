@@ -1,4 +1,5 @@
 use std::sync::Mutex;
+use serde_repr::*;
 use crate::server::server_error::ServerError;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -8,7 +9,8 @@ pub struct Conditioner {
     mode: ConditionerMode
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy)]
+#[repr(i32)]
 pub enum ConditionerMode {
     Auto = 0,
     Cool = 1,
