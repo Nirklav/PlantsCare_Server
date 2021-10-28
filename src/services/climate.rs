@@ -19,7 +19,7 @@ pub enum ConditionerMode {
     Heat = 4
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Copy, Clone)]
 pub struct WeatherSensor {
     channel: i32,
     temperature: f32,
@@ -31,6 +31,7 @@ pub struct Climate {
     state: Mutex<State>
 }
 
+#[derive(Serialize, Debug, Clone)]
 pub struct Sensors {
     weather_sensors: Vec<WeatherSensor>,
     sensor_temp: f32,
@@ -107,6 +108,11 @@ impl Climate {
             .iter()
             .map(|c| c.clone())
             .collect())
+    }
+
+    pub fn sensors(&self) -> Result<Sensors, ServerError> {
+        let guard = self.state.lock()?;
+        Ok(guard.sensors.clone())
     }
 
     pub fn calculate(&self, sensors: Sensors) -> Result<Vec<Conditioner>, ServerError> {
