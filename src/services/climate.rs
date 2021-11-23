@@ -5,6 +5,7 @@ use crate::server::server_error::ServerError;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Conditioner {
     enabled: bool,
+    controlled: bool,
     temperature: i32,
     mode: ConditionerMode
 }
@@ -24,7 +25,8 @@ pub struct WeatherSensor {
     channel: i32,
     temperature: f32,
     humidity: i32,
-    low_battery: bool
+    low_battery: bool,
+    time: Option<u64>
 }
 
 pub struct Climate {
@@ -81,6 +83,7 @@ impl Climate {
     fn new_conditioner() -> Conditioner {
         Conditioner {
             enabled: false,
+            controlled: false,
             temperature: 20,
             mode: ConditionerMode::Cool
         }
