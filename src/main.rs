@@ -25,6 +25,7 @@ use crate::utils::water_sensor::WaterSensor;
 use crate::utils::water_pump::WaterPump;
 use crate::utils::servo::Servo;
 use crate::services::climate::Climate;
+use crate::services::switches::Switches;
 
 mod config;
 mod server;
@@ -94,7 +95,8 @@ struct PlantsCareServiceFactory {
     water_sensor: Arc<WaterSensor>,
     water_pump: Arc<WaterPump>,
     servo: Arc<Servo>,
-    climate: Arc<Climate>
+    climate: Arc<Climate>,
+    switches: Arc<Switches>
 }
 
 impl PlantsCareServiceFactory {
@@ -105,7 +107,8 @@ impl PlantsCareServiceFactory {
             water_sensor: Arc::new(water_sensor),
             water_pump: Arc::new(water_pump),
             servo: Arc::new(servo),
-            climate: Arc::new(Climate::new())
+            climate: Arc::new(Climate::new()),
+            switches: Arc::new(Switches::new()),
         }
     }
 }
@@ -128,6 +131,9 @@ impl NewService for PlantsCareServiceFactory {
         service.add_handler(conditioners_request::ConditionersRequest::new(&self.protected_key, &self.climate));
         service.add_handler(get_climate_request::GetClimateRequest::new(&self.protected_key, &self.climate));
         service.add_handler(set_climate_request::SetClimateRequest::new(&self.protected_key, &self.climate));
+
+        service.add_handler(is_enabled_request::IsEnabledRequest::new(&self.protected_key, &self.switches));
+        service.add_handler(set_switch_request::SetSwitchRequest::new(&self.protected_key, &self.switches));
         Ok(service)
     }
 }

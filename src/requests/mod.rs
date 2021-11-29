@@ -6,3 +6,5 @@ pub mod turn_servo_request;
 pub mod conditioners_request;
 pub mod get_climate_request;
 pub mod set_climate_request;
+pub mod is_enabled_request;
+pub mod set_switch_request;
