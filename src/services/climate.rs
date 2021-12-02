@@ -96,6 +96,7 @@ impl Climate {
             if let Some(conditioner) = conditioners.get(i) {
                 if let Some (to_set) = guard.conditioners.get_mut(i) {
                     to_set.enabled = conditioner.enabled;
+                    to_set.controlled = conditioner.controlled;
                     to_set.temperature = conditioner.temperature;
                     to_set.mode = conditioner.mode;
                 }
