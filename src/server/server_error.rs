@@ -95,7 +95,8 @@ pub enum LogicError {
     CameraNotFound = 2,
     CommandMethodIdNotSet = 3,
     CommandInputNotSet = 4,
-    CommandUnsupportedContentType = 5
+    CommandUnsupportedContentType = 5,
+    CommandSocketAddressNotFound = 6
 }
 
 impl Error for LogicError {
@@ -105,7 +106,8 @@ impl Error for LogicError {
             LogicError::CameraNotFound => "Camera was not found",
             LogicError::CommandMethodIdNotSet => "Command method is not set",
             LogicError::CommandInputNotSet => "Command input is not set",
-            LogicError::CommandUnsupportedContentType => "Command has unsupported content type"
+            LogicError::CommandUnsupportedContentType => "Command has unsupported content type",
+            LogicError::CommandSocketAddressNotFound => "Socket address not found"
         }
     }
 }
