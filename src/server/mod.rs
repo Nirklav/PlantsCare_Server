@@ -107,12 +107,13 @@ impl PlantsCareService {
         error!("error: {}", &server_error);
         match server_error {
             ServerError::Json(_) => Self::error(None, StatusCode::BadRequest),
+            ServerError::Io(_) => Self::error(Some("Io error".to_owned()), StatusCode::InternalServerError),
             ServerError::Logic(_) => Self::error(Some("Logic error".to_owned()), StatusCode::InternalServerError),
             ServerError::Hyper(e) => future::err(e),
             ServerError::Camera(_) => Self::error(Some("Camera error".to_owned()), StatusCode::InternalServerError),
             ServerError::Rppal(_) => Self::error(Some("Rppal lib error".to_owned()), StatusCode::InternalServerError),
             ServerError::Read(_) => Self::error(None, StatusCode::BadRequest),
-            ServerError::Posion => Self::error(Some("Poison error".to_owned()), StatusCode::InternalServerError)
+            ServerError::Posion => Self::error(Some("Poison error".to_owned()), StatusCode::InternalServerError),
         }
     }
 
