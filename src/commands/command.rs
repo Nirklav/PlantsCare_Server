@@ -18,7 +18,7 @@ pub struct Command {
 impl Command {
     pub fn new<A: ToSocketAddrs>(addr: A) -> Result<Self, ServerError> {
         let mut addrs = addr.to_socket_addrs()?;
-        let first = addrs.next().ok_or(LogicError::CommandSocketAddressNotFound.into())?;
+        let first = addrs.next().ok_or(LogicError::CommandSocketAddressNotFound)?;
 
         Ok(Command {
             address: first,
@@ -40,8 +40,9 @@ impl Command {
     pub fn execute<O: DeserializeOwned>(self) -> Result<O, ServerError> {
         let mut stream = TcpStream::connect(self.address)?;
         let input = self.input.ok_or(LogicError::CommandInputNotSet)?;
+        let method_id = self.method_id.ok_or(LogicError::CommandMethodIdNotSet)?;
 
-        stream.write_i32(self.method_id.ok_or(LogicError::CommandMethodIdNotSet)?);
+        stream.write_i32(method_id);
         stream.write_i32(input.len() as i32);
         stream.write_i32(1);
         stream.write(&input);
