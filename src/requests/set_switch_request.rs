@@ -57,7 +57,7 @@ impl ProtectedJsonRequestHandler for SetSwitchRequest {
     fn process(&self, input: Input) -> Result<Output, ServerError> {
         let (created, ip, port) = self.switches.set(&input.name, input.value)?;
 
-        info!("Set switch with {}:{}", &ip, &port);
+        info!("Set switch with {:?}:{:?}", &ip, &port);
 
         if let Some(ip) = ip {
             if let Some(port) = port {
