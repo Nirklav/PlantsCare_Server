@@ -1,5 +1,5 @@
 use std::fmt;
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::{Display, Formatter};
 use std::error::Error;
 use std::sync::PoisonError;
 use std::io;
@@ -14,7 +14,7 @@ use futures::future::FutureResult;
 use crate::utils::camera::CameraError;
 use crate::utils::rppal_error::RppalError;
 
-#[derive(Debug)]
+#[derive(fmt::Debug)]
 pub enum ServerError {
     Json(serde_json::error::Error),
     Io(io::Error),

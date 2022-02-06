@@ -1,6 +1,8 @@
 use std::io::{Read, Write};
 use std::net::*;
 
+use byteorder::{ReadBytesExt, WriteBytesExt};
+
 use serde_json;
 use serde::{Serialize};
 use serde::de::{DeserializeOwned};
@@ -22,8 +24,8 @@ impl Command {
         })
     }
 
-    pub fn input<I>(mut self, dto: I) -> Result<Self, ServerError> {
-        self.input = Some(serde_json::to_vec(dto)?);
+    pub fn input<I: Serialize>(mut self, dto: I) -> Result<Self, ServerError> {
+        self.input = Some(serde_json::to_vec(&dto)?);
         Ok(self)
     }
 
@@ -32,7 +34,7 @@ impl Command {
         self
     }
 
-    pub fn execute<O>(self) -> Result<Self, ServerError> {
+    pub fn execute<O: DeserializeOwned>(self) -> Result<Self, ServerError> {
         let mut stream = TcpStream::connect(self.address)?;
         let input = self.input.ok_or(LogicError::CommandInputNotSet)?;
 
@@ -49,11 +51,10 @@ impl Command {
 
         let mut buf = vec![0u8; size];
         stream.read_exact(&mut buf)?;
-
         let output = serde_json::from_slice::<O>(&buf)?;
 
         stream.shutdown(Shutdown::Both)?;
 
-        output
+        Ok(output)
     }
 }
