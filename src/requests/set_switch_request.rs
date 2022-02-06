@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::commands::command::Command;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
@@ -15,6 +16,16 @@ pub struct Input {
 #[derive(Serialize, Debug)]
 pub struct Output {
     created: bool
+}
+
+#[derive(Serialize, Debug)]
+pub struct EnableCommandInput {
+    enabled: bool
+}
+
+#[derive(Deserialize, Debug)]
+pub struct EnableCommandOutput {
+
 }
 
 impl ProtectedInput for Input {
@@ -44,7 +55,21 @@ impl ProtectedJsonRequestHandler for SetSwitchRequest {
     }
 
     fn process(&self, input: Input) -> Result<Output, ServerError> {
-        let created = self.switches.set(&input.name, input.value)?;
+        let (created, ip, port) = self.switches.set(&input.name, input.value)?;
+
+        if let Some(ip) = ip {
+            if let Some(port) = port {
+                let r = Command::new((ip, port))?
+                    .method_id(0)
+                    .input(EnableCommandInput { enabled: input.value })?
+                    .execute::<EnableCommandOutput>();
+
+                if let Err(e) = r {
+                    error!("error on switch command: {}", &e)
+                }
+            }
+        }
+
         Ok(Output {
             created
         })

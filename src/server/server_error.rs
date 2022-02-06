@@ -1,7 +1,8 @@
 use std::fmt;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::error::Error;
 use std::sync::PoisonError;
+use std::io;
 
 use hyper;
 use hyper::StatusCode;
@@ -16,6 +17,7 @@ use crate::utils::rppal_error::RppalError;
 #[derive(Debug)]
 pub enum ServerError {
     Json(serde_json::error::Error),
+    Io(io::Error),
     Logic(LogicError),
     Hyper(hyper::Error),
     Camera(CameraError),
@@ -27,6 +29,12 @@ pub enum ServerError {
 impl From<serde_json::error::Error> for ServerError {
     fn from(e: serde_json::error::Error) -> Self {
         ServerError::Json(e)
+    }
+}
+
+impl From<io::Error> for ServerError {
+    fn from(e: io::Error) -> Self {
+        ServerError::Io(e)
     }
 }
 
@@ -70,6 +78,7 @@ impl Display for ServerError {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
         match *self {
             ServerError::Json(ref e) => e.fmt(f),
+            ServerError::Io(ref e) => e.fmt(f),
             ServerError::Logic(ref e) => e.fmt(f),
             ServerError::Hyper(ref e) => e.fmt(f),
             ServerError::Camera(ref e) => e.fmt(f),
@@ -84,13 +93,19 @@ impl Display for ServerError {
 pub enum LogicError {
     InvalidProtectedKey = 1,
     CameraNotFound = 2,
+    CommandMethodIdNotSet = 3,
+    CommandInputNotSet = 4,
+    CommandUnsupportedContentType = 5
 }
 
 impl Error for LogicError {
     fn description(&self) -> &str {
         match *self {
             LogicError::InvalidProtectedKey => "Invalid protected key",
-            LogicError::CameraNotFound => "Camera was not found"
+            LogicError::CameraNotFound => "Camera was not found",
+            LogicError::CommandMethodIdNotSet => "Command method is not set",
+            LogicError::CommandInputNotSet => "Command input is not set",
+            LogicError::CommandUnsupportedContentType => "Command has unsupported content type"
         }
     }
 }

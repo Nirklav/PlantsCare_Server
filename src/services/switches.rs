@@ -11,7 +11,9 @@ struct State {
 
 struct Switch {
     name: String,
-    enabled: bool
+    enabled: bool,
+    ip: Option<String>,
+    port: Option<u16>
 }
 
 impl Switches {
@@ -27,28 +29,41 @@ impl Switches {
         }
     }
 
-    pub fn is_enabled(&self, name: &str) -> Result<bool, ServerError> {
+    pub fn is_enabled(&self, name: &str, ip: &Option<String>, port: &Option<u16>) -> Result<bool, ServerError> {
         let mut guard = self.state.lock()?;
 
-        if let Some(switch) = Switches::find_mut(&mut guard, name) {
+        if let Some(mut switch) = Switches::find_mut(&mut guard, name) {
+            switch.ip = ip.clone();
+            switch.port = port.clone();
             return Ok(switch.enabled)
+        } else {
+            let switch = Switch {
+                name: name.to_string(),
+                ip: ip.clone(),
+                port: port.clone(),
+                enabled: false
+            };
+            guard.switches.push(switch);
         }
-        return Ok(false)
+
+        Ok(false)
     }
 
-    pub fn set(&self, name: &str, value: bool) -> Result<bool, ServerError> {
+    pub fn set(&self, name: &str, value: bool) -> Result<(bool, Option<String>, Option<u16>), ServerError> {
         let mut guard = self.state.lock()?;
 
         if let Some(switch) = Switches::find_mut(&mut guard, name) {
             switch.enabled = value;
-            Ok(false)
+            Ok((false, switch.ip.clone(), switch.port.clone()))
         } else {
             let switch = Switch {
                 name: name.to_string(),
+                ip: None,
+                port: None,
                 enabled: value
             };
             guard.switches.push(switch);
-            Ok(true)
+            Ok((true, None, None))
         }
     }
 

@@ -8,7 +8,9 @@ use crate::Switches;
 #[derive(Deserialize, Debug)]
 pub struct Input {
     key: String,
-    name: String
+    name: String,
+    ip: Option<String>,
+    port: Option<u16>
 }
 
 #[derive(Serialize, Debug)]
@@ -43,7 +45,7 @@ impl ProtectedJsonRequestHandler for IsEnabledRequest {
     }
 
     fn process(&self, input: Input) -> Result<Output, ServerError> {
-        let enabled = self.switches.is_enabled(&input.name)?;
+        let enabled = self.switches.is_enabled(&input.name, &input.ip, &input.port)?;
         Ok(Output {
             enabled
         })

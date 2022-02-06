@@ -32,6 +32,7 @@ mod server;
 mod requests;
 mod utils;
 mod services;
+mod commands;
 
 fn main() {
     let mut args = std::env::args();
