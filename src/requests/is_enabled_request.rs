@@ -45,8 +45,6 @@ impl ProtectedJsonRequestHandler for IsEnabledRequest {
     }
 
     fn process(&self, input: Input) -> Result<Output, ServerError> {
-        info!("Switch registered with {:?}:{:?}", &input.ip, &input.port);
-
         let enabled = self.switches.is_enabled(&input.name, &input.ip, &input.port)?;
         Ok(Output {
             enabled
