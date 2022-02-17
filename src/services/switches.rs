@@ -33,8 +33,14 @@ impl Switches {
         let mut guard = self.state.lock()?;
 
         if let Some(mut switch) = Switches::find_mut(&mut guard, name) {
-            switch.ip = ip.clone();
-            switch.port = port.clone();
+            if ip.is_some() {
+                switch.ip = ip.clone()
+            }
+
+            if port.is_some() {
+                switch.port = port.clone()
+            }
+
             return Ok(switch.enabled)
         } else {
             let switch = Switch {
