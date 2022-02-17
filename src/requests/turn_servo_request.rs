@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::server::InputData;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler, ProtectedJsonRequestHandlerAdapter, ProtectedInput};
@@ -42,7 +43,7 @@ impl ProtectedJsonRequestHandler for TurnServoRequest {
         "turn-servo"
     }
 
-    fn process(&self, input: Input) -> Result<Output, ServerError> {
+    fn process(&self, input: Input, _: &InputData) -> Result<Output, ServerError> {
         self.servo.turn_to(input.angle)?;
         Ok(Output {
             result: "Ok".to_string()

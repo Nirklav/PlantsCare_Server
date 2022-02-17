@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::server::InputData;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
@@ -45,7 +46,7 @@ impl ProtectedJsonRequestHandler for ConditionersRequest {
         "conditioners"
     }
 
-    fn process(&self, input: Input) -> Result<Output, ServerError> {
+    fn process(&self, input: Input, _: &InputData) -> Result<Output, ServerError> {
         let sensors = Sensors::new(input.sensors, input.sensor_temp, input.bedroom_temp, input.living_temp);
         let conditioners = self.climate.calculate(sensors)?;
         Ok(Output {

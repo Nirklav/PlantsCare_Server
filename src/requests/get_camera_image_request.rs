@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use base64;
+use crate::server::InputData;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
@@ -42,7 +43,7 @@ impl ProtectedJsonRequestHandler for GetCameraImageRequest {
         "get-camera-image"
     }
 
-    fn process(&self, _: Input) -> Result<Output, ServerError> {
+    fn process(&self, _: Input, _: &InputData) -> Result<Output, ServerError> {
         let photo = self.camera.make_photo()?;
         let photo_len = photo.len();
 

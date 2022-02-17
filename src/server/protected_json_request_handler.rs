@@ -3,6 +3,7 @@ use std::fmt::Debug;
 
 use serde::{Serialize};
 use serde::de::{DeserializeOwned};
+use crate::server::InputData;
 
 use crate::server::server_error::{ServerError, LogicError};
 use crate::server::request_handler::RequestHandler;
@@ -13,7 +14,7 @@ pub trait ProtectedJsonRequestHandler: Send + Sync {
     type Output : Serialize + Debug;
 
     fn method(&self) -> &'static str;
-    fn process(&self, input: Self::Input) -> Result<Self::Output, ServerError>;
+    fn process(&self, input: Self::Input, input_data: &InputData) -> Result<Self::Output, ServerError>;
 }
 
 pub trait ProtectedInput {
@@ -42,12 +43,12 @@ impl<H: ProtectedJsonRequestHandler> JsonRequestHandler for ProtectedJsonRequest
         self.inner.method()
     }
 
-    fn process(&self, input: Self::Input) -> Result<Self::Output, ServerError> {
+    fn process(&self, input: Self::Input, input_data: &InputData) -> Result<Self::Output, ServerError> {
         if self.protected_key.ne(input.get_protected_key()) {
             return Err(LogicError::InvalidProtectedKey.into());
         }
 
-        self.inner.process(input)
+        self.inner.process(input, input_data)
     }
 }
 

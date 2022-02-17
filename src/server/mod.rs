@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use std::collections::HashMap;
+use std::net::SocketAddr;
 
 use futures::Future;
 use futures::Stream;
@@ -68,16 +69,18 @@ impl PlantsCareService {
 
     fn read_data(info: InputInfo) -> Box<dyn Future<Item=InputData, Error=ServerError>> {
         let request_handler = info.request_handler;
+        let remote_addr = info.request.remote_addr();
         let f = info.request
             .body()
             .concat2()
-            .and_then(|b| {
+            .and_then(move |b| {
                 let data = InputData {
                     request_handler,
+                    remote_addr,
                     str: match String::from_utf8(b.to_owned()) {
                         Ok(s) => s,
                         Err(e) => return future::err(e.into())
-                    }
+                    },
                 };
 
                 future::ok(data)
@@ -88,7 +91,7 @@ impl PlantsCareService {
     }
 
     fn process_data(data: InputData) -> FutureResult<Response, ServerError> {
-        let output = match data.request_handler.process(data.str) {
+        let output = match data.request_handler.process(&data) {
             Ok(o) => o,
             Err(e) => {
                 error!("error on request process: {}", &e);
@@ -165,7 +168,8 @@ struct InputInfo {
     request_handler: Arc<dyn RequestHandler>
 }
 
-struct InputData {
+pub struct InputData {
     request_handler: Arc<dyn RequestHandler>,
-    str: String
+    pub remote_addr: Option<SocketAddr>,
+    pub str: String,
 }

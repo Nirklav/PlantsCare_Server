@@ -6,6 +6,7 @@ use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler,
 use crate::utils::water_sensor::WaterSensor;
 use crate::utils::water_pump::WaterPump;
 use std::time::Duration;
+use crate::server::InputData;
 
 #[derive(Deserialize, Debug)]
 pub struct Input {
@@ -48,7 +49,7 @@ impl ProtectedJsonRequestHandler for WaterRequest {
         "water"
     }
 
-    fn process(&self, i: Input) -> Result<Output, ServerError> {
+    fn process(&self, i: Input, _: &InputData) -> Result<Output, ServerError> {
         info!("water request: duration {}s, force {}", &i.duration_seconds, &i.force);
 
         let is_enough_water = self.water_sensor.is_enough()?;

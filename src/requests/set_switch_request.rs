@@ -1,5 +1,6 @@
 use std::sync::Arc;
 use crate::commands::command::Command;
+use crate::server::InputData;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
@@ -54,7 +55,7 @@ impl ProtectedJsonRequestHandler for SetSwitchRequest {
         "set-switch"
     }
 
-    fn process(&self, input: Input) -> Result<Output, ServerError> {
+    fn process(&self, input: Input, _: &InputData) -> Result<Output, ServerError> {
         let (created, ip, port) = self.switches.set(&input.name, input.value)?;
 
         if let Some(ip) = ip {

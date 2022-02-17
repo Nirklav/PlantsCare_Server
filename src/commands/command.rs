@@ -42,10 +42,10 @@ impl Command {
         let input = self.input.ok_or(LogicError::CommandInputNotSet)?;
         let method_id = self.method_id.ok_or(LogicError::CommandMethodIdNotSet)?;
 
-        stream.write_i32::<LittleEndian>(method_id);
-        stream.write_i32::<LittleEndian>(input.len() as i32);
-        stream.write_i32::<LittleEndian>(1);
-        stream.write(&input);
+        stream.write_i32::<LittleEndian>(method_id)?;
+        stream.write_i32::<LittleEndian>(input.len() as i32)?;
+        stream.write_i32::<LittleEndian>(1)?;
+        stream.write(&input)?;
 
         let size = stream.read_i32::<LittleEndian>()? as usize;
         let content_type = stream.read_i32::<LittleEndian>()?;

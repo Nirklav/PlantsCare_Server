@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::server::InputData;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
@@ -41,7 +42,7 @@ impl ProtectedJsonRequestHandler for IsEnoughWaterRequest {
         "is-enough-water"
     }
 
-    fn process(&self, _: Input) -> Result<Output, ServerError> {
+    fn process(&self, _: Input, _: &InputData) -> Result<Output, ServerError> {
         Ok(Output {
             result: self.water_sensor.is_enough()?
         })

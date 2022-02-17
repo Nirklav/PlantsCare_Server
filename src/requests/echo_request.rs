@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::server::InputData;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::json_request_handler::{JsonRequestHandler, JsonRequestHandlerAdapter};
@@ -30,7 +31,7 @@ impl JsonRequestHandler for EchoRequest {
         "echo"
     }
 
-    fn process(&self, input: Input) -> Result<Output, ServerError> {
+    fn process(&self, input: Input, _: &InputData) -> Result<Output, ServerError> {
         if input.str.eq("logic error test") {
             return Err(LogicError::InvalidProtectedKey.into());
         }

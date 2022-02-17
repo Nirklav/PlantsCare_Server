@@ -4,6 +4,7 @@ use std::fmt::Debug;
 use serde_json;
 use serde::{Serialize};
 use serde::de::{DeserializeOwned};
+use crate::server::InputData;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError, LogicError};
@@ -13,7 +14,7 @@ pub trait JsonRequestHandler: Sync + Send {
     type Output : Serialize + Debug;
 
     fn method(&self) -> &'static str;
-    fn process(&self, input: Self::Input) -> Result<Self::Output, ServerError>;
+    fn process(&self, input: Self::Input, input_data: &InputData) -> Result<Self::Output, ServerError>;
 }
 
 pub struct JsonRequestHandlerAdapter<H: JsonRequestHandler> {
@@ -33,9 +34,9 @@ impl<H: JsonRequestHandler> RequestHandler for JsonRequestHandlerAdapter<H> {
         self.inner.method()
     }
 
-    fn process(&self, input_json: String) -> Result<String, ServerError> {
-        let input : H::Input = serde_json::from_str(&input_json)?;
-        let output = self.inner.process(input)?;
+    fn process(&self, input_data: &InputData) -> Result<String, ServerError> {
+        let input : H::Input = serde_json::from_str(&input_data.str)?;
+        let output = self.inner.process(input, &input_data)?;
         let output_json = serde_json::to_string(&output)?;
         Ok(output_json)
     }

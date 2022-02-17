@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use crate::server::InputData;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
@@ -44,8 +45,17 @@ impl ProtectedJsonRequestHandler for IsEnabledRequest {
         "is-enabled"
     }
 
-    fn process(&self, input: Input) -> Result<Output, ServerError> {
-        let enabled = self.switches.is_enabled(&input.name, &input.ip, &input.port)?;
+    fn process(&self, input: Input, input_data: &InputData) -> Result<Output, ServerError> {
+        info!("Switch {:?} registered with {:?}:{:?} from {:?}", &input.name, &input.ip, &input.port, &input_data.remote_addr);
+
+        let enabled = if let Some(addr) = input_data.remote_addr {
+            let ip = Some(addr.ip().to_string());
+            let port = Some(addr.port());
+            self.switches.is_enabled(&input.name, &ip, &port)?
+        } else {
+            self.switches.is_enabled(&input.name, &input.ip, &input.port)?
+        };
+
         Ok(Output {
             enabled
         })
