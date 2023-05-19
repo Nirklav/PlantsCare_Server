@@ -1,10 +1,13 @@
 use std::sync::Arc;
-use crate::server::InputData;
+use async_trait::async_trait;
+use hyper::http::request::Parts;
 
 use crate::server::request_handler::RequestHandler;
-use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler, ProtectedJsonRequestHandlerAdapter, ProtectedInput};
 use crate::server::server_error::{ServerError};
 use crate::utils::servo::Servo;
+
+use serde::{Deserialize, Serialize};
+use crate::server::json_request_handler::{JsonMethodHandler, JsonMethodHandlerAdapter};
 
 #[derive(Deserialize, Debug)]
 pub struct Input {
@@ -17,36 +20,33 @@ pub struct Output {
     result: String
 }
 
-impl ProtectedInput for Input {
-    fn get_protected_key(&self) -> &str {
-        &self.key
-    }
-}
-
 pub struct TurnServoRequest {
     servo: Arc<Servo>
 }
 
 impl TurnServoRequest {
-    pub fn new(key: &str, servo: &Arc<Servo>) -> Arc<dyn RequestHandler> {
-        ProtectedJsonRequestHandlerAdapter::new(key, TurnServoRequest {
-            servo: servo.clone()
-        })
+    pub fn new(key: &str, servo: &Arc<Servo>) -> Arc<RequestHandler> {
+        let key = Some(key.to_string());
+        Arc::new(RequestHandler::new("turn-servo")
+            .set_post(JsonMethodHandlerAdapter::new(TurnServoRequest {
+                servo: servo.clone()
+            }, key)))
     }
 }
 
-impl ProtectedJsonRequestHandler for TurnServoRequest {
+#[async_trait]
+impl JsonMethodHandler for TurnServoRequest {
     type Input = Input;
     type Output = Output;
 
-    fn method(&self) -> &'static str {
-        "turn-servo"
-    }
-
-    fn process(&self, input: Input, _: &InputData) -> Result<Output, ServerError> {
+    async fn process(&self, _parts: Parts, input: Input) -> Result<Output, ServerError> {
         self.servo.turn_to(input.angle)?;
         Ok(Output {
             result: "Ok".to_string()
         })
+    }
+
+    fn read_key<'a>(&self, input: &'a Input) -> Option<&'a str> {
+        Some(&input.key)
     }
 }

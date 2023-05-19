@@ -1,21 +1,65 @@
 use std::sync::Arc;
+use async_trait::async_trait;
+use hyper::http::request::Parts;
 use crate::commands::command::Command;
-use crate::server::InputData;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
-use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler, ProtectedJsonRequestHandlerAdapter, ProtectedInput};
 use crate::Switches;
 
+use serde::{Deserialize, Serialize};
+use crate::server::json_request_handler::{JsonMethodHandler, JsonMethodHandlerAdapter};
+
+pub struct SwitchRequest;
+
+impl SwitchRequest {
+    pub fn new(key: &str, switches: &Arc<Switches>) -> Arc<RequestHandler> {
+        let key = Some(key.to_string());
+        Arc::new(RequestHandler::new("set-switch")
+            .set_get(JsonMethodHandlerAdapter::new(GetSwitchMethod {
+                switches: switches.clone()
+            }, key.clone()))
+            .set_post(JsonMethodHandlerAdapter::new(PostSwitchMethod {
+                switches: switches.clone()
+            }, key.clone())))
+    }
+}
+
 #[derive(Deserialize, Debug)]
-pub struct Input {
-    key: String,
+pub struct GetInput {
+    name: String
+}
+
+#[derive(Serialize, Debug)]
+pub struct GetOutput {
+    enabled: bool
+}
+
+pub struct GetSwitchMethod {
+    switches: Arc<Switches>
+}
+
+#[async_trait]
+impl JsonMethodHandler for GetSwitchMethod {
+    type Input = GetInput;
+    type Output = GetOutput;
+
+    async fn process(&self, _parts: Parts, input: GetInput) -> Result<GetOutput, ServerError> {
+        Ok(GetOutput {
+            enabled: self.switches.is_enabled(&input.name, &None, &None)?
+        })
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct PostInput {
+    key: Option<String>,
     name: String,
     value: bool
 }
 
 #[derive(Serialize, Debug)]
-pub struct Output {
+pub struct PostOutput {
     created: bool
 }
 
@@ -29,33 +73,16 @@ pub struct EnableCommandOutput {
 
 }
 
-impl ProtectedInput for Input {
-    fn get_protected_key(&self) -> &str {
-        &self.key
-    }
-}
-
-pub struct SetSwitchRequest {
+pub struct PostSwitchMethod {
     switches: Arc<Switches>
 }
 
-impl SetSwitchRequest {
-    pub fn new(key: &str, switches: &Arc<Switches>) -> Arc<dyn RequestHandler> {
-        ProtectedJsonRequestHandlerAdapter::new(key, SetSwitchRequest {
-            switches: switches.clone()
-        })
-    }
-}
+#[async_trait]
+impl JsonMethodHandler for PostSwitchMethod {
+    type Input = PostInput;
+    type Output = PostOutput;
 
-impl ProtectedJsonRequestHandler for SetSwitchRequest {
-    type Input = Input;
-    type Output = Output;
-
-    fn method(&self) -> &'static str {
-        "set-switch"
-    }
-
-    fn process(&self, input: Input, _: &InputData) -> Result<Output, ServerError> {
+    async fn process(&self, _parts: Parts, input: PostInput) -> Result<PostOutput, ServerError> {
         let (created, ip, port) = self.switches.set(&input.name, input.value)?;
 
         if let Some(ip) = ip {
@@ -71,8 +98,12 @@ impl ProtectedJsonRequestHandler for SetSwitchRequest {
             }
         }
 
-        Ok(Output {
+        Ok(PostOutput {
             created
         })
+    }
+
+    fn read_key<'a>(&self, input: &'a PostInput) -> Option<&'a str> {
+        input.key.as_ref().map(|x| x.as_str())
     }
 }

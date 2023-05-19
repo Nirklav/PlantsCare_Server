@@ -1,14 +1,17 @@
 use std::sync::Arc;
-use crate::server::InputData;
+use async_trait::async_trait;
+use hyper::http::request::Parts;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
-use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler, ProtectedJsonRequestHandlerAdapter, ProtectedInput};
 use crate::Switches;
+
+use serde::{Deserialize, Serialize};
+use crate::server::json_request_handler::{JsonMethodHandler, JsonMethodHandlerAdapter};
 
 #[derive(Deserialize, Debug)]
 pub struct Input {
-    key: String,
+    key: Option<String>,
     name: String,
     ip: Option<String>,
     port: Option<u16>
@@ -19,35 +22,38 @@ pub struct Output {
     enabled: bool
 }
 
-impl ProtectedInput for Input {
-    fn get_protected_key(&self) -> &str {
-        &self.key
-    }
-}
-
 pub struct IsEnabledRequest {
     switches: Arc<Switches>
 }
 
 impl IsEnabledRequest {
-    pub fn new(key: &str, switches: &Arc<Switches>) -> Arc<dyn RequestHandler> {
-        ProtectedJsonRequestHandlerAdapter::new(key, IsEnabledRequest {
+    pub fn new(key: &str, switches: &Arc<Switches>) -> Arc<RequestHandler> {
+        Arc::new(RequestHandler::new("is-enabled")
+            .set_get(Self::adapter(key, switches))
+            .set_post(Self::adapter(key, switches)))
+    }
+
+    fn adapter(key: &str, switches: &Arc<Switches>) -> JsonMethodHandlerAdapter<IsEnabledRequest> {
+        let key = Some(key.to_string());
+        let request = IsEnabledRequest {
             switches: switches.clone()
-        })
+        };
+        JsonMethodHandlerAdapter::new(request, key)
     }
 }
 
-impl ProtectedJsonRequestHandler for IsEnabledRequest {
+#[async_trait]
+impl JsonMethodHandler for IsEnabledRequest {
     type Input = Input;
     type Output = Output;
 
-    fn method(&self) -> &'static str {
-        "is-enabled"
-    }
-
-    fn process(&self, input: Input, _: &InputData) -> Result<Output, ServerError> {
+    async fn process(&self, _parts: Parts, input: Input) -> Result<Output, ServerError> {
         Ok(Output {
             enabled: self.switches.is_enabled(&input.name, &input.ip, &input.port)?
         })
+    }
+
+    fn read_key<'a>(&self, input: &'a Input) -> Option<&'a str> {
+        input.key.as_ref().map(|x| x.as_str())
     }
 }

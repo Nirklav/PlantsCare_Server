@@ -1,22 +1,15 @@
-extern crate futures;
-extern crate hyper;
-
-#[macro_use]
-extern crate serde_derive;
-extern crate serde;
-extern crate serde_json;
-
 #[macro_use]
 extern crate log;
-extern crate log4rs;
 
+use std::convert::Infallible;
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
 
-use hyper::server::{Http, Request, Response, NewService};
+use hyper::Server;
+use hyper::service::{make_service_fn, service_fn};
 
-use server::PlantsCareService;
+use server::RpiHomeContext;
 use config::Config;
 use utils::camera::Camera;
 
@@ -34,7 +27,8 @@ mod utils;
 mod services;
 mod commands;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let mut args = std::env::args();
 
     args.next(); // skip exe
@@ -58,83 +52,59 @@ fn main() {
     };
 
     let camera = match Camera::new() {
-        Ok(c) => c,
+        Ok(c) => Arc::new(c),
         Err(e) => panic!("error on camera creation {}", e)
     };
 
     let water_sensor = match WaterSensor::new() {
-        Ok(ws) => ws,
+        Ok(ws) => Arc::new(ws),
         Err(e) => panic!("error on water sensor creation {}", e)
     };
 
     let water_pump = match WaterPump::new() {
-        Ok(wp) => wp,
+        Ok(wp) => Arc::new(wp),
         Err(e) => panic!("error on water pump creation {}", e)
     };
 
     let servo = match Servo::new() {
-        Ok(s) => s,
+        Ok(s) => Arc::new(s),
         Err(e) => panic!("error on servo creation {}", e)
     };
 
-    let factory = PlantsCareServiceFactory::new(config.protected_key.clone(), camera, water_sensor, water_pump, servo);
-    let server = match Http::new().bind(&socket_addr, factory) {
-        Ok(s) => s,
-        Err(e) => panic!("error on server bind: {}", e)
-    };
+    let climate = Arc::new(Climate::new());
+    let switches = Arc::new(Switches::new());
 
-    info!("Running server...");
+    let mut context = RpiHomeContext::new();
+    context.add_handler(echo_request::EchoRequest::new());
 
-    if let Err(e) = server.run() {
-        panic!("error on server run: {}", e)
-    };
-}
+    context.add_handler(get_camera_image_request::GetCameraImageRequest::new(&config.protected_key, &camera));
+    context.add_handler(is_enough_water_request::IsEnoughWaterRequest::new(&config.protected_key, &water_sensor));
+    context.add_handler(water_request::WaterRequest::new(&config.protected_key, &water_sensor, &water_pump));
+    context.add_handler(turn_servo_request::TurnServoRequest::new(&config.protected_key, &servo));
 
-struct PlantsCareServiceFactory {
-    protected_key: String,
-    camera: Arc<Camera>,
-    water_sensor: Arc<WaterSensor>,
-    water_pump: Arc<WaterPump>,
-    servo: Arc<Servo>,
-    climate: Arc<Climate>,
-    switches: Arc<Switches>
-}
+    context.add_handler(conditioners_request::ConditionersRequest::new(&config.protected_key, &climate));
+    context.add_handler(get_climate_request::GetClimateRequest::new(&config.protected_key, &climate));
+    context.add_handler(set_climate_request::SetClimateRequest::new(&config.protected_key, &climate));
 
-impl PlantsCareServiceFactory {
-    fn new(protected_key: String, camera: Camera, water_sensor: WaterSensor, water_pump: WaterPump, servo: Servo) -> Self {
-        PlantsCareServiceFactory {
-            protected_key,
-            camera: Arc::new(camera),
-            water_sensor: Arc::new(water_sensor),
-            water_pump: Arc::new(water_pump),
-            servo: Arc::new(servo),
-            climate: Arc::new(Climate::new()),
-            switches: Arc::new(Switches::new()),
-        }
-    }
-}
+    context.add_handler(is_enabled_request::IsEnabledRequest::new(&config.protected_key, &switches));
+    context.add_handler(set_switch_request::SwitchRequest::new(&config.protected_key, &switches));
 
-impl NewService for PlantsCareServiceFactory {
-    type Request = Request;
-    type Response = Response;
-    type Error = hyper::Error;
-    type Instance = PlantsCareService;
+    let context = Arc::new(context);
 
-    fn new_service(&self) -> std::io::Result<Self::Instance> {
-        let mut service = PlantsCareService::new();
-        service.add_handler(echo_request::EchoRequest::new());
+    let make_service = make_service_fn(move |_conn| {
+        let context = context.clone();
+        let service = service_fn(move |req| {
+            RpiHomeContext::handle(context.clone(), req)
+        });
 
-        service.add_handler(get_camera_image_request::GetCameraImageRequest::new(&self.protected_key, &self.camera));
-        service.add_handler(is_enough_water_request::IsEnoughWaterRequest::new(&self.protected_key, &self.water_sensor));
-        service.add_handler(water_request::WaterRequest::new(&self.protected_key, &self.water_sensor, &self.water_pump));
-        service.add_handler(turn_servo_request::TurnServoRequest::new(&self.protected_key, &self.servo));
+        async move { Ok::<_, Infallible>(service) }
+    });
 
-        service.add_handler(conditioners_request::ConditionersRequest::new(&self.protected_key, &self.climate));
-        service.add_handler(get_climate_request::GetClimateRequest::new(&self.protected_key, &self.climate));
-        service.add_handler(set_climate_request::SetClimateRequest::new(&self.protected_key, &self.climate));
+    let server = Server::bind(&socket_addr).serve(make_service);
 
-        service.add_handler(is_enabled_request::IsEnabledRequest::new(&self.protected_key, &self.switches));
-        service.add_handler(set_switch_request::SetSwitchRequest::new(&self.protected_key, &self.switches));
-        Ok(service)
+    println!("Listening on http://{}", socket_addr);
+
+    if let Err(e) = server.await {
+        eprintln!("server error: {}", e);
     }
 }

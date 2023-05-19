@@ -4,6 +4,7 @@ use std::path::Path;
 use std::io::{Error, Read};
 
 use serde_json;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {

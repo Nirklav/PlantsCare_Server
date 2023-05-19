@@ -1,10 +1,13 @@
 use std::sync::Arc;
-use crate::server::InputData;
+use async_trait::async_trait;
+use hyper::http::request::Parts;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
-use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler, ProtectedJsonRequestHandlerAdapter, ProtectedInput};
 use crate::services::climate::{Conditioner, Climate, Sensors};
+
+use serde::{Deserialize, Serialize};
+use crate::server::json_request_handler::{JsonMethodHandler, JsonMethodHandlerAdapter};
 
 #[derive(Deserialize, Debug)]
 pub struct Input {
@@ -17,38 +20,35 @@ pub struct Output {
     sensors: Sensors
 }
 
-impl ProtectedInput for Input {
-    fn get_protected_key(&self) -> &str {
-        &self.key
-    }
-}
-
 pub struct GetClimateRequest {
     climate: Arc<Climate>
 }
 
 impl GetClimateRequest {
-    pub fn new(key: &str, climate: &Arc<Climate>) -> Arc<dyn RequestHandler> {
-        ProtectedJsonRequestHandlerAdapter::new(key, GetClimateRequest {
-            climate: climate.clone()
-        })
+    pub fn new(key: &str, climate: &Arc<Climate>) -> Arc<RequestHandler> {
+        let key = Some(key.to_string());
+        Arc::new(RequestHandler::new("get-climate")
+            .set_post(JsonMethodHandlerAdapter::new(GetClimateRequest {
+                climate: climate.clone()
+            }, key)))
     }
 }
 
-impl ProtectedJsonRequestHandler for GetClimateRequest {
+#[async_trait]
+impl JsonMethodHandler for GetClimateRequest {
     type Input = Input;
     type Output = Output;
 
-    fn method(&self) -> &'static str {
-        "get-climate"
-    }
-
-    fn process(&self, _: Input, _: &InputData) -> Result<Output, ServerError> {
+    async fn process(&self, _parts: Parts, _input: Input) -> Result<Output, ServerError> {
         let conditioners = self.climate.conditioners()?;
         let sensors = self.climate.sensors()?;
         Ok(Output {
             conditioners,
             sensors
         })
+    }
+
+    fn read_key<'a>(&self, input: &'a Input) -> Option<&'a str> {
+        Some(&input.key)
     }
 }

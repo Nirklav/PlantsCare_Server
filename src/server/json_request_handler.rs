@@ -1,65 +1,85 @@
-use std::sync::Arc;
 use std::fmt::Debug;
+use async_trait::async_trait;
+use hyper::http::request::Parts;
+use hyper::{Body, Response, StatusCode};
+use hyper::body::Bytes;
 
 use serde_json;
-use serde::{Serialize};
-use serde::de::{DeserializeOwned};
-use crate::server::InputData;
+use serde::{Serialize, de::DeserializeOwned};
 
-use crate::server::request_handler::RequestHandler;
-use crate::server::server_error::{ServerError, LogicError};
+use crate::server::request_handler::MethodHandler;
+use crate::server::server_error::{LogicError, ServerError};
 
-pub trait JsonRequestHandler: Sync + Send {
-    type Input : DeserializeOwned + Debug;
+#[async_trait]
+pub trait JsonMethodHandler : Sync + Send {
+    type Input : DeserializeOwned + Debug + Send;
     type Output : Serialize + Debug;
 
-    fn method(&self) -> &'static str;
-    fn process(&self, input: Self::Input, input_data: &InputData) -> Result<Self::Output, ServerError>;
-}
+    async fn process(&self, parts: Parts, input: Self::Input) -> Result<Self::Output, ServerError>;
 
-pub struct JsonRequestHandlerAdapter<H: JsonRequestHandler> {
-    inner: H
-}
-
-impl<H: 'static + JsonRequestHandler> JsonRequestHandlerAdapter<H> {
-    pub fn new(inner: H) -> Arc<dyn RequestHandler> {
-        Arc::new(JsonRequestHandlerAdapter {
-            inner
-        })
+    fn read_key<'a>(&self, _input: &'a Self::Input) -> Option<&'a str> {
+        None
     }
 }
 
-impl<H: JsonRequestHandler> RequestHandler for JsonRequestHandlerAdapter<H> {
-    fn method(&self) -> &'static str {
-        self.inner.method()
-    }
+pub struct JsonMethodHandlerAdapter<H: JsonMethodHandler> {
+    inner: H,
+    key: Option<String>
+}
 
-    fn process(&self, input_data: &InputData) -> Result<String, ServerError> {
-        let input : H::Input = serde_json::from_str(&input_data.str)?;
-        let output = self.inner.process(input, &input_data)?;
-        let output_json = serde_json::to_string(&output)?;
-        Ok(output_json)
+impl<H: 'static + JsonMethodHandler> JsonMethodHandlerAdapter<H> {
+    pub fn new(inner: H, key: Option<String>) -> Self {
+        JsonMethodHandlerAdapter {
+            inner,
+            key
+        }
     }
+}
 
-    fn on_error(&self, e: ServerError) -> Result<String, ServerError> {
-        if let ServerError::Logic(se) = e {
-            let output_json = serde_json::to_string(&ErrorOutput::new(se))?;
-            return Ok(output_json);
+impl<H: JsonMethodHandler> JsonMethodHandlerAdapter<H> {
+    pub fn check_key(&self, parts: &Parts, input: &H::Input) -> Result<(), ServerError> {
+        if let Some(key) = &self.key {
+
+            let req_key = if let Some(k) = H::read_key(&self.inner, &input) {
+                Some(k)
+            } else {
+                if let Some(h) = parts.headers.get("Protected-Key") {
+                    Some(h.to_str()?)
+                } else {
+                    None
+                }
+            };
+
+            match req_key {
+                Some(rk) => {
+                    if rk != key {
+                        return Err(LogicError::InvalidProtectedKey.into())
+                    }
+                }
+                None => return Err(LogicError::InvalidProtectedKey.into())
+            }
         }
 
-        Err(e)
+        Ok(())
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ErrorOutput {
-    code: i32
-}
+#[async_trait]
+impl<H: JsonMethodHandler> MethodHandler for JsonMethodHandlerAdapter<H> {
+    async fn process(&self, parts: Parts, data: Bytes) -> Result<Response<Body>, ServerError> {
+        let input : H::Input = serde_json::from_slice(&data)?;
 
-impl ErrorOutput {
-    fn new(error: LogicError) -> Self {
-        ErrorOutput {
-            code: error as i32
-        }
+        self.check_key(&parts, &input)?;
+
+        let output = self.inner.process(parts, input).await?;
+        let output = serde_json::to_vec(&output)?;
+
+        let resp = Response::builder()
+            .status(StatusCode::OK)
+            .header(hyper::http::header::CONTENT_TYPE, "application/json")
+            .header(hyper::http::header::CONTENT_LENGTH, output.len())
+            .body(Body::from(output))?;
+
+        Ok(resp)
     }
 }

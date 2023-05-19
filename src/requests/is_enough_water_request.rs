@@ -1,10 +1,13 @@
 use std::sync::Arc;
-use crate::server::InputData;
+use async_trait::async_trait;
+use hyper::http::request::Parts;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
-use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler, ProtectedJsonRequestHandlerAdapter, ProtectedInput};
 use crate::utils::water_sensor::WaterSensor;
+
+use serde::{Deserialize, Serialize};
+use crate::server::json_request_handler::{JsonMethodHandler, JsonMethodHandlerAdapter};
 
 #[derive(Deserialize, Debug)]
 pub struct Input {
@@ -16,35 +19,32 @@ pub struct Output {
     result: bool
 }
 
-impl ProtectedInput for Input {
-    fn get_protected_key(&self) -> &str {
-        &self.key
-    }
-}
-
 pub struct IsEnoughWaterRequest {
     water_sensor: Arc<WaterSensor>
 }
 
 impl IsEnoughWaterRequest {
-    pub fn new(key: &str, water_sensor: &Arc<WaterSensor>) -> Arc<dyn RequestHandler> {
-        ProtectedJsonRequestHandlerAdapter::new(key, IsEnoughWaterRequest {
-            water_sensor: water_sensor.clone()
-        })
+    pub fn new(key: &str, water_sensor: &Arc<WaterSensor>) -> Arc<RequestHandler> {
+        let key = Some(key.to_string());
+        Arc::new(RequestHandler::new("is-enough-water")
+            .set_post(JsonMethodHandlerAdapter::new(IsEnoughWaterRequest {
+                water_sensor: water_sensor.clone()
+            }, key)))
     }
 }
 
-impl ProtectedJsonRequestHandler for IsEnoughWaterRequest {
+#[async_trait]
+impl JsonMethodHandler for IsEnoughWaterRequest {
     type Input = Input;
     type Output = Output;
 
-    fn method(&self) -> &'static str {
-        "is-enough-water"
-    }
-
-    fn process(&self, _: Input, _: &InputData) -> Result<Output, ServerError> {
+    async fn process(&self, _: Parts, _: Input) -> Result<Output, ServerError> {
         Ok(Output {
             result: self.water_sensor.is_enough()?
         })
+    }
+
+    fn read_key<'a>(&self, input: &'a Input) -> Option<&'a str> {
+        Some(&input.key)
     }
 }

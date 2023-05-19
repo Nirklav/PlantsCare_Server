@@ -5,8 +5,7 @@ use std::thread;
 #[cfg(target_os = "linux")]
 use std::time::Duration;
 
-use std::fmt;
-use std::fmt::{Display, Formatter};
+use thiserror::Error;
 
 pub struct Camera {
     #[cfg(target_os="linux")]
@@ -54,32 +53,10 @@ impl Camera {
     }
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum CameraError {
     #[cfg(target_os = "linux")]
-    Rascam(rascam::CameraError),
+    Rascam(#[from] rascam::CameraError),
     #[cfg(target_os = "linux")]
     NotFound
-}
-
-impl Display for CameraError {
-    #[cfg(not(target_os = "linux"))]
-    fn fmt(&self, _: &mut Formatter<'_>) -> Result<(), fmt::Error> {
-        Ok(())
-    }
-
-    #[cfg(target_os = "linux")]
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), fmt::Error> {
-        match &self {
-            CameraError::Rascam(ref e) => e.fmt(f),
-            CameraError::NotFound => write!(f, "Camera not found")
-        }
-    }
-}
-
-#[cfg(target_os = "linux")]
-impl From<rascam::CameraError> for CameraError {
-    fn from(e: rascam::CameraError) -> Self {
-        CameraError::Rascam(e)
-    }
 }

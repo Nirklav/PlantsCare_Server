@@ -1,10 +1,13 @@
 use std::sync::Arc;
-use crate::server::InputData;
+use async_trait::async_trait;
+use hyper::http::request::Parts;
 
 use crate::server::request_handler::RequestHandler;
 use crate::server::server_error::{ServerError};
-use crate::server::protected_json_request_handler::{ProtectedJsonRequestHandler, ProtectedJsonRequestHandlerAdapter, ProtectedInput};
 use crate::services::climate::{Conditioner, Climate};
+
+use serde::{Deserialize, Serialize};
+use crate::server::json_request_handler::{JsonMethodHandler, JsonMethodHandlerAdapter};
 
 #[derive(Deserialize, Debug)]
 pub struct Input {
@@ -17,36 +20,33 @@ pub struct Output {
     result: String
 }
 
-impl ProtectedInput for Input {
-    fn get_protected_key(&self) -> &str {
-        &self.key
-    }
-}
-
 pub struct SetClimateRequest {
     climate: Arc<Climate>
 }
 
 impl SetClimateRequest {
-    pub fn new(key: &str, climate: &Arc<Climate>) -> Arc<dyn RequestHandler> {
-        ProtectedJsonRequestHandlerAdapter::new(key, SetClimateRequest {
-            climate: climate.clone()
-        })
+    pub fn new(key: &str, climate: &Arc<Climate>) -> Arc<RequestHandler> {
+        let key = Some(key.to_string());
+        Arc::new(RequestHandler::new("set-climate")
+            .set_post(JsonMethodHandlerAdapter::new(SetClimateRequest {
+                climate: climate.clone()
+            }, key)))
     }
 }
 
-impl ProtectedJsonRequestHandler for SetClimateRequest {
+#[async_trait]
+impl JsonMethodHandler for SetClimateRequest {
     type Input = Input;
     type Output = Output;
 
-    fn method(&self) -> &'static str {
-        "set-climate"
-    }
-
-    fn process(&self, input: Input, _: &InputData) -> Result<Output, ServerError> {
+    async fn process(&self, _parts: Parts, input: Input) -> Result<Output, ServerError> {
         self.climate.set(&input.conditioners)?;
         Ok(Output {
             result: "Success".to_owned()
         })
+    }
+
+    fn read_key<'a>(&self, input: &'a Input) -> Option<&'a str> {
+        Some(&input.key)
     }
 }

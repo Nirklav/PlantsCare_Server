@@ -2,6 +2,8 @@ use std::sync::Mutex;
 use serde_repr::*;
 use crate::server::server_error::ServerError;
 
+use serde::{Deserialize, Serialize};
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Conditioner {
     enabled: bool,
