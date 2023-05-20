@@ -56,7 +56,9 @@ impl Camera {
 #[derive(Error, Debug)]
 pub enum CameraError {
     #[cfg(target_os = "linux")]
+    #[error("Rascam error: {0}")]
     Rascam(#[from] rascam::CameraError),
     #[cfg(target_os = "linux")]
+    #[error("Camera not found")]
     NotFound
 }
