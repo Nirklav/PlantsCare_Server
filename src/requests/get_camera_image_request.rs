@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use async_trait::async_trait;
-use base64;
+use base64::engine::{Engine, general_purpose};
 use hyper::http::request::Parts;
 
 use crate::server::request_handler::RequestHandler;
@@ -44,7 +44,7 @@ impl JsonMethodHandler for GetCameraImageRequest {
         let photo_len = photo.len();
 
         info!("Encoding photo to base64...");
-        let photo_encoded = base64::encode(photo);
+        let photo_encoded = general_purpose::STANDARD.encode(photo);
         info!("Photo converted to base64 (before: {}, after: {})", photo_len, photo_encoded.len());
 
         info!("Sending photo...");

@@ -2,8 +2,6 @@
 use rppal::gpio;
 #[cfg(target_os = "linux")]
 use rppal::pwm;
-#[cfg(target_os = "linux")]
-use std::io;
 
 use thiserror::Error;
 
