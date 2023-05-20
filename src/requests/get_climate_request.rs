@@ -11,7 +11,7 @@ use crate::server::json_request_handler::{JsonMethodHandler, JsonMethodHandlerAd
 
 #[derive(Deserialize, Debug, Default)]
 pub struct Input {
-    key: String,
+    key: Option<String>,
 }
 
 #[derive(Serialize, Debug)]
@@ -49,6 +49,6 @@ impl JsonMethodHandler for GetClimateRequest {
     }
 
     fn read_key<'a>(&self, input: &'a Input) -> Option<&'a str> {
-        Some(&input.key)
+        input.key.as_ref().map(|x| x.as_str())
     }
 }
