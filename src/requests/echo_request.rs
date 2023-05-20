@@ -8,7 +8,7 @@ use crate::server::server_error::{ServerError, LogicError};
 use serde::{Deserialize, Serialize};
 use crate::server::json_request_handler::{JsonMethodHandler, JsonMethodHandlerAdapter};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 pub struct Input {
     str: String
 }

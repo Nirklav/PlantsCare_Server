@@ -12,7 +12,7 @@ use crate::server::server_error::{LogicError, ServerError};
 
 #[async_trait]
 pub trait JsonMethodHandler : Sync + Send {
-    type Input : DeserializeOwned + Debug + Send;
+    type Input : DeserializeOwned + Default + Debug + Send;
     type Output : Serialize + Debug;
 
     async fn process(&self, parts: Parts, input: Self::Input) -> Result<Self::Output, ServerError>;
@@ -67,7 +67,11 @@ impl<H: JsonMethodHandler> JsonMethodHandlerAdapter<H> {
 #[async_trait]
 impl<H: JsonMethodHandler> MethodHandler for JsonMethodHandlerAdapter<H> {
     async fn process(&self, parts: Parts, data: Bytes) -> Result<Response<Body>, ServerError> {
-        let input : H::Input = serde_json::from_slice(&data)?;
+        let input : H::Input = if data.len() > 0 {
+            serde_json::from_slice(&data)?
+        } else {
+            Default::default()
+        };
 
         self.check_key(&parts, &input)?;
 

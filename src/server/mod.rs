@@ -40,7 +40,11 @@ impl RpiHomeContext {
                 return Self::error_message("Not found", StatusCode::NOT_FOUND);
             }
         } else {
-            parts.uri.path()[1..].to_string()
+            parts.uri.path()[1..]
+                .split('/')
+                .next()
+                .unwrap_or("")
+                .to_string()
         };
 
         let data = match hyper::body::to_bytes(body).await {

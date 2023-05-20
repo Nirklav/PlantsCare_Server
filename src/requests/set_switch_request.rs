@@ -25,11 +25,6 @@ impl SwitchRequest {
     }
 }
 
-#[derive(Deserialize, Debug)]
-pub struct GetInput {
-    name: String
-}
-
 #[derive(Serialize, Debug)]
 pub struct GetOutput {
     enabled: bool
@@ -41,17 +36,22 @@ pub struct GetSwitchMethod {
 
 #[async_trait]
 impl JsonMethodHandler for GetSwitchMethod {
-    type Input = GetInput;
+    type Input = ();
     type Output = GetOutput;
 
-    async fn process(&self, _parts: Parts, input: GetInput) -> Result<GetOutput, ServerError> {
+    async fn process(&self, parts: Parts, _: ()) -> Result<GetOutput, ServerError> {
+        let name = parts.uri.path()
+            .split('/')
+            .next_back()
+            .unwrap_or("");
+
         Ok(GetOutput {
-            enabled: self.switches.is_enabled(&input.name, &None, &None)?
+            enabled: self.switches.is_enabled(name, &None, &None)?
         })
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 pub struct PostInput {
     key: Option<String>,
     name: String,

@@ -10,7 +10,7 @@ use crate::utils::camera::Camera;
 use serde::{Deserialize, Serialize};
 use crate::server::json_request_handler::{JsonMethodHandler, JsonMethodHandlerAdapter};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 pub struct Input {
     key: String
 }
